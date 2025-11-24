@@ -42,7 +42,8 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             description TEXT,
-            -- TODO: Can we make this into boolean True / False?
+            -- SQLite doesn't have a native BOOLEAN type. It uses INTEGER where 0 = False and 1 = True.
+            -- This is a common pattern in SQLite. We convert it back to bool in Python using bool(row['completed']).
             completed INTEGER NOT NULL DEFAULT 0,
             created_at TEXT,
             updated_at TEXT
@@ -59,13 +60,17 @@ init_db()
 def get_db_connection():
     """Get database connection"""
     conn = sqlite3.connect(DB_FILE)
-    # TODO: Explain this and explain why I dont see row_factory anywhere else in the code.
-    conn.row_factory = sqlite3.Row  # This allows column access by name
+    # row_factory = sqlite3.Row converts each row from a tuple to a Row object that allows
+    # column access by name (row['id']) instead of by index (row[0]). This makes code more readable.
+    conn.row_factory = sqlite3.Row
     return conn
 
-# TODO: Isn't there an sqlite built in function for this?
+# SQLite doesn't have a built-in function to convert rows to dictionaries.
+# However, sqlite3.Row objects have a .keys() method and can be converted using dict(row).
+# But we need custom logic to convert INTEGER (0/1) to bool, so a custom function is better here.
 def row_to_dict(row):
     """Convert SQLite row to dictionary"""
+    # Alternative: dict(row) would work, but we need to convert completed INTEGER to bool
     return {
         'id': row['id'],
         'title': row['title'],
@@ -108,37 +113,29 @@ def create_todo_in_db(todo: TodoItem) -> dict:
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Check if ID already exists (if provided)
-    if todo.id is not None:
-        cursor.execute("SELECT id FROM todos WHERE id = ?", (todo.id,))
-        if cursor.fetchone():
-            conn.close()
-            raise HTTPException(status_code=400, detail="Todo with this ID already exists")
-    
     # Set timestamps
     now = datetime.now().isoformat()
     
-    # TODO: Explain this protects us from SQL injection
-    if todo.id is not None:
-        # Insert with specific ID
-        cursor.execute("""
-            INSERT INTO todos (id, title, description, completed, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (todo.id, todo.title, todo.description, 1 if todo.completed else 0, now, now))
-    else:
-        # Let SQLite auto-increment the ID
-        cursor.execute("""
-            INSERT INTO todos (title, description, completed, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?)
-        """, (todo.title, todo.description, 1 if todo.completed else 0, now, now))
-        # TODO: Explain this
-        todo.id = cursor.lastrowid
+    # Always let SQLite auto-increment the ID - we don't include 'id' in the INSERT statement.
+    # SQLite will automatically generate the next ID using AUTOINCREMENT.
+    # Using RETURNING clause (SQLite 3.35.0+) to get the inserted row atomically.
+    # This is safer than cursor.lastrowid because it returns the actual row that was inserted,
+    # eliminating any race condition concerns between INSERT and SELECT.
+    # Parameterized queries (using ? placeholders) protect against SQL injection.
+    cursor.execute("""
+        INSERT INTO todos (title, description, completed, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+        RETURNING *
+    """, (todo.title, todo.description, 1 if todo.completed else 0, now, now))
+    
+    # Fetch the row that was just inserted (RETURNING clause returns it directly)
+    row = cursor.fetchone()
     
     conn.commit()
     conn.close()
     
-    # Return the created todo
-    return get_todo_by_id(todo.id)
+    # Convert the returned row to dictionary
+    return row_to_dict(row)
 
 def update_todo_in_db(todo_id: int, todo_update: TodoUpdate) -> dict:
     """Update an existing todo in database"""
@@ -262,3 +259,8 @@ def delete_all_todos():
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
 
+# Run the server from root directory:
+# uvicorn server_sqlite.main_sqlite:app --reload --port 8001
+#
+# Or from server_sqlite directory:
+# uvicorn main_sqlite:app --reload --port 8001
