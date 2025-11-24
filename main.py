@@ -66,6 +66,9 @@ def read_root():
 #     todos = read_todos()
 #     return todos
 
+# /todos?completed=true"
+# /todos?completed=false"
+# /todos
 @app.get("/todos", response_model=list[TodoItem])
 def get_all_todos(completed: bool | None = None):
     """Get all todos, optionally filtered by completed status"""
@@ -155,3 +158,6 @@ def delete_all_todos():
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
+
+
+# uvicorn main:app --reload --port 8000
