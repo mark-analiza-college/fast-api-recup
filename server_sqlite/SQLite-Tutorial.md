@@ -81,6 +81,15 @@ sqlite3 todos_db.sqlite
 sqlite3 new_database.sqlite
 ```
 
+### Opening a Database File On windows
+```bash
+# Open existing database
+sqlite3 py -m todos_db.sqlite
+
+# Create new database (if file doesn't exist)
+sqlite3 py -m new_database.sqlite
+```
+
 ### SQLite CLI Prompt
 Once opened, you'll see:
 ```
