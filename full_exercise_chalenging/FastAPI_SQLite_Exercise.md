@@ -185,45 +185,24 @@ def delete_car_owner_from_db(owner_id: int) -> bool:
 
 ### Step 3.1: Create Endpoints
 
-```python
-@app.get("/")
-def read_root():
-    """Root endpoint"""
-    return {"message": "Welcome to Car Owner Management API", "version": "1.0.0"}
+Implement the following endpoints following the pattern from `main_sqlite.py`:
 
-@app.get("/car-owners", response_model=list[CarOwner])
-def get_all_car_owners():
-    """Get all car owners"""
-    # TODO: Call read_car_owners() and return
-    pass
+**GET /car-owners**
+- Pseudocode: Retrieve all car owners from database → Return as list
 
-@app.get("/car-owners/{owner_id}", response_model=CarOwner)
-def get_car_owner(owner_id: int):
-    """Get a specific car owner by ID"""
-    # TODO: Call get_car_owner_by_id()
-    # TODO: Handle 404 if not found
-    pass
+**GET /car-owners/{owner_id}**
+- Pseudocode: Retrieve car owner by ID → If not found, return 404 → Return car owner data
 
-@app.post("/car-owners", response_model=CarOwner, status_code=201)
-def create_car_owner(owner: CarOwner):
-    """Create a new car owner"""
-    # TODO: Call create_car_owner_in_db()
-    pass
+**POST /car-owners**
+- Pseudocode: Create car owner in database → Return created car owner with generated ID
 
-@app.put("/car-owners/{owner_id}", response_model=CarOwner)
-def update_car_owner(owner_id: int, owner_update: CarOwnerUpdate):
-    """Update an existing car owner"""
-    # TODO: Call update_car_owner_in_db()
-    # TODO: Handle 404 if not found
-    pass
+**PUT /car-owners/{owner_id}**
+- Pseudocode: Check if exists → If not found, return 404 → Update only provided fields → Return updated car owner
 
-@app.delete("/car-owners/{owner_id}", status_code=204)
-def delete_car_owner(owner_id: int):
-    """Delete a car owner"""
-    # TODO: Call delete_car_owner_from_db()
-    # TODO: Handle 404 if not found
-    pass
-```
+**DELETE /car-owners/{owner_id}**
+- Pseudocode: Check if exists → If not found, return 404 → Delete from database → Return 204 status
+
+**Hint:** Look at the corresponding endpoints in `main_sqlite.py` for the exact pattern.
 
 **✅ Checkpoint:** Test all endpoints using FastAPI docs at `http://localhost:8003/docs`
 
@@ -282,40 +261,24 @@ def validate_owner_exists(owner_id: int) -> bool:
 
 ### Step 5.1: Create Car Endpoints
 
-```python
-@app.get("/cars", response_model=list[Car])
-def get_all_cars(owner_id: int | None = None):
-    """Get all cars, optionally filtered by owner_id"""
-    # TODO: Call read_cars(owner_id)
-    pass
+Implement the following endpoints:
 
-@app.get("/cars/{car_id}", response_model=Car)
-def get_car(car_id: int):
-    """Get a specific car by ID"""
-    # TODO: Call get_car_by_id()
-    # TODO: Handle 404
-    pass
+**GET /cars**
+- Pseudocode: If owner_id provided, filter by owner → Otherwise retrieve all → Return list of cars
 
-@app.post("/cars", response_model=Car, status_code=201)
-def create_car(car: Car):
-    """Create a new car"""
-    # TODO: Call create_car_in_db()
-    pass
+**GET /cars/{car_id}**
+- Pseudocode: Retrieve car by ID → If not found, return 404 → Return car data
 
-@app.put("/cars/{car_id}", response_model=Car)
-def update_car(car_id: int, car_update: CarUpdate):
-    """Update an existing car"""
-    # TODO: Call update_car_in_db()
-    # TODO: Handle 404
-    pass
+**POST /cars**
+- Pseudocode: Validate owner_id exists → If not found, return 400 → Create car in database → Return created car
 
-@app.delete("/cars/{car_id}", status_code=204)
-def delete_car(car_id: int):
-    """Delete a car"""
-    # TODO: Call delete_car_from_db()
-    # TODO: Handle 404
-    pass
-```
+**PUT /cars/{car_id}**
+- Pseudocode: Check if car exists → If not found, return 404 → If owner_id updated, validate it exists → Update only provided fields → Return updated car
+
+**DELETE /cars/{car_id}**
+- Pseudocode: Check if car exists → If not found, return 404 → Delete from database → Return 204 status
+
+**Hint:** Look at the corresponding endpoints in `main_sqlite.py` for the exact pattern.
 
 **✅ Checkpoint:** Test all car endpoints. Try creating a car with invalid owner_id - should return 400 error.
 
@@ -345,23 +308,15 @@ Create functions to export data to CSV format (as strings).
 
 ### Step 6.2: CSV Export Endpoints
 
-```python
-@app.get("/car-owners/export-csv")
-def export_car_owners_csv():
-    """Export all car owners as CSV file"""
-    csv_content = export_car_owners_to_csv()
-    return Response(
-        content=csv_content,
-        media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=car_owners.csv"}
-    )
+Implement the following endpoints:
 
-@app.get("/cars/export-csv")
-def export_cars_csv(owner_id: int | None = None):
-    """Export cars as CSV file, optionally filtered by owner_id"""
-    # TODO: Implement similar to export_car_owners_csv()
-    pass
-```
+**GET /car-owners/export-csv**
+- Pseudocode: Generate CSV string from all car owners → Return CSV file as response with proper headers (Content-Disposition, media_type)
+
+**GET /cars/export-csv**
+- Pseudocode: If owner_id provided, filter cars → Generate CSV string → Return CSV file as response with proper headers
+
+**Hint:** Use `Response` with `media_type="text/csv"` and `Content-Disposition` header for file download.
 
 **✅ Checkpoint:** Test CSV export - download files and open in Excel/text editor.
 
@@ -394,24 +349,15 @@ Create functions to import data from CSV.
 
 ### Step 7.2: CSV Import Endpoints
 
-```python
-@app.post("/car-owners/upload-csv")
-async def upload_car_owners_csv(file: UploadFile = File(...)):
-    """Upload a CSV file and import car owners"""
-    # Validate file type
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="File must be a CSV file")
-    
-    contents = await file.read()
-    result = import_car_owners_from_csv(contents)
-    return result
+Implement the following endpoints:
 
-@app.post("/cars/upload-csv")
-async def upload_cars_csv(file: UploadFile = File(...)):
-    """Upload a CSV file and import cars"""
-    # TODO: Implement similar to upload_car_owners_csv()
-    pass
-```
+**POST /car-owners/upload-csv**
+- Pseudocode: Validate file is CSV → Read file contents → Parse CSV and extract data → Insert valid rows into database → Return import result with count
+
+**POST /cars/upload-csv**
+- Pseudocode: Validate file is CSV → Read file contents → Parse CSV and extract data → For each car, validate owner_id exists → Insert valid cars → Return import result with count
+
+**Hint:** Use `UploadFile` parameter, validate file extension, and handle errors appropriately.
 
 **✅ Checkpoint:** Test CSV import - use the sample CSV files provided.
 
@@ -421,26 +367,13 @@ async def upload_cars_csv(file: UploadFile = File(...)):
 
 ### Step 8.1: Get Owner's Cars
 
-```python
-@app.get("/car-owners/{owner_id}/cars", response_model=list[Car])
-def get_owner_cars(owner_id: int):
-    """Get all cars owned by a specific person"""
-    # TODO: Validate owner exists first
-    # TODO: Call read_cars(owner_id)
-    pass
-```
+**GET /car-owners/{owner_id}/cars**
+- Pseudocode: Validate owner exists → If not found, return 404 → Retrieve all cars for owner → Return list of cars
 
 ### Step 8.2: Get Car's Owner
 
-```python
-@app.get("/cars/{car_id}/owner", response_model=CarOwner)
-def get_car_owner(car_id: int):
-    """Get the owner of a specific car"""
-    # TODO: Get car by ID
-    # TODO: Get owner by car.owner_id
-    # TODO: Handle 404 for both car and owner
-    pass
-```
+**GET /cars/{car_id}/owner**
+- Pseudocode: Get car by ID → If car not found, return 404 → Get owner by car.owner_id → If owner not found, return 404 → Return owner data
 
 ---
 

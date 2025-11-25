@@ -28,22 +28,42 @@ DB_FILE = "car_owners_db.sqlite"
 # Pydantic Models
 # ============================================================================
 
-# TODO: Create CarOwner model
-# Should have: id (optional int), name (required str), age (required int), 
-#              email (required str), created_at (optional str)
-# Look at TodoItem in main_sqlite.py for pattern
+class CarOwner(BaseModel):
+    """
+    CarOwner model - represents a car owner in the system.
+    
+    Should have: id (optional int), name (required str), age (required int), 
+                 email (required str), created_at (optional str)
+    Look at TodoItem in main_sqlite.py for pattern
+    """
+    pass
 
-# TODO: Create CarOwnerUpdate model
-# Should have: name, age, email (all optional)
-# Look at TodoUpdate in main_sqlite.py for pattern
+class CarOwnerUpdate(BaseModel):
+    """
+    CarOwnerUpdate model - for partial updates of car owners.
+    
+    Should have: name, age, email (all optional)
+    Look at TodoUpdate in main_sqlite.py for pattern
+    """
+    pass
 
-# TODO: Create Car model
-# Should have: id (optional int), brand (required str), model (required str),
-#              year (required int), color (required str), owner_id (required int),
-#              created_at (optional str)
+class Car(BaseModel):
+    """
+    Car model - represents a car in the system.
+    
+    Should have: id (optional int), brand (required str), model (required str),
+                 year (required int), color (required str), owner_id (required int),
+                 created_at (optional str)
+    """
+    pass
 
-# TODO: Create CarUpdate model
-# Should have: brand, model, year, color, owner_id (all optional)
+class CarUpdate(BaseModel):
+    """
+    CarUpdate model - for partial updates of cars.
+    
+    Should have: brand, model, year, color, owner_id (all optional)
+    """
+    pass
 
 # ============================================================================
 # Database Initialization
@@ -163,88 +183,180 @@ def read_root():
 # Car Owner Endpoints
 @app.get("/car-owners", response_model=list[CarOwner])
 def get_all_car_owners():
-    """Get all car owners"""
-    # TODO: Implement
+    """
+    Get all car owners
+    
+    Pseudocode:
+    - Retrieve all car owners from database
+    - Return as list
+    """
     pass
 
 @app.get("/car-owners/{owner_id}", response_model=CarOwner)
 def get_car_owner(owner_id: int):
-    """Get a specific car owner by ID"""
-    # TODO: Implement
+    """
+    Get a specific car owner by ID
+    
+    Pseudocode:
+    - Retrieve car owner by ID from database
+    - If not found, return 404 error
+    - Return car owner data
+    """
     pass
 
 @app.post("/car-owners", response_model=CarOwner, status_code=201)
 def create_car_owner(owner: CarOwner):
-    """Create a new car owner"""
-    # TODO: Implement
+    """
+    Create a new car owner
+    
+    Pseudocode:
+    - Create car owner in database
+    - Return created car owner with generated ID
+    """
     pass
 
 @app.put("/car-owners/{owner_id}", response_model=CarOwner)
 def update_car_owner(owner_id: int, owner_update: CarOwnerUpdate):
-    """Update an existing car owner"""
-    # TODO: Implement
+    """
+    Update an existing car owner
+    
+    Pseudocode:
+    - Check if car owner exists
+    - If not found, return 404 error
+    - Update only provided fields
+    - Return updated car owner
+    """
     pass
 
 @app.delete("/car-owners/{owner_id}", status_code=204)
 def delete_car_owner(owner_id: int):
-    """Delete a car owner"""
-    # TODO: Implement
+    """
+    Delete a car owner
+    
+    Pseudocode:
+    - Check if car owner exists
+    - If not found, return 404 error
+    - Delete car owner from database
+    - Return 204 status (no content)
+    """
     pass
 
 # Car Endpoints
 @app.get("/cars", response_model=list[Car])
 def get_all_cars(owner_id: int | None = None):
-    """Get all cars, optionally filtered by owner_id"""
-    # TODO: Implement
+    """
+    Get all cars, optionally filtered by owner_id
+    
+    Pseudocode:
+    - If owner_id provided, filter cars by owner
+    - Otherwise, retrieve all cars
+    - Return list of cars
+    """
     pass
 
 @app.get("/cars/{car_id}", response_model=Car)
 def get_car(car_id: int):
-    """Get a specific car by ID"""
-    # TODO: Implement
+    """
+    Get a specific car by ID
+    
+    Pseudocode:
+    - Retrieve car by ID from database
+    - If not found, return 404 error
+    - Return car data
+    """
     pass
 
 @app.post("/cars", response_model=Car, status_code=201)
 def create_car(car: Car):
-    """Create a new car"""
-    # TODO: Implement
+    """
+    Create a new car
+    
+    Pseudocode:
+    - Validate that owner_id exists
+    - If owner not found, return 400 error
+    - Create car in database
+    - Return created car with generated ID
+    """
     pass
 
 @app.put("/cars/{car_id}", response_model=Car)
 def update_car(car_id: int, car_update: CarUpdate):
-    """Update an existing car"""
-    # TODO: Implement
+    """
+    Update an existing car
+    
+    Pseudocode:
+    - Check if car exists
+    - If not found, return 404 error
+    - If owner_id is being updated, validate it exists
+    - Update only provided fields
+    - Return updated car
+    """
     pass
 
 @app.delete("/cars/{car_id}", status_code=204)
 def delete_car(car_id: int):
-    """Delete a car"""
-    # TODO: Implement
+    """
+    Delete a car
+    
+    Pseudocode:
+    - Check if car exists
+    - If not found, return 404 error
+    - Delete car from database
+    - Return 204 status (no content)
+    """
     pass
 
 # CSV Endpoints
 @app.get("/car-owners/export-csv")
 def export_car_owners_csv():
-    """Export all car owners as CSV file"""
-    # TODO: Implement
+    """
+    Export all car owners as CSV file
+    
+    Pseudocode:
+    - Generate CSV string from all car owners
+    - Return CSV file as response with proper headers
+    """
     pass
 
 @app.get("/cars/export-csv")
 def export_cars_csv(owner_id: int | None = None):
-    """Export cars as CSV file, optionally filtered by owner_id"""
-    # TODO: Implement
+    """
+    Export cars as CSV file, optionally filtered by owner_id
+    
+    Pseudocode:
+    - If owner_id provided, filter cars by owner
+    - Generate CSV string from cars
+    - Return CSV file as response with proper headers
+    """
     pass
 
 @app.post("/car-owners/upload-csv")
 async def upload_car_owners_csv(file: UploadFile = File(...)):
-    """Upload a CSV file and import car owners"""
-    # TODO: Implement
+    """
+    Upload a CSV file and import car owners
+    
+    Pseudocode:
+    - Validate file is CSV
+    - Read file contents
+    - Parse CSV and extract car owner data
+    - Insert each valid row into database
+    - Return import result with count
+    """
     pass
 
 @app.post("/cars/upload-csv")
 async def upload_cars_csv(file: UploadFile = File(...)):
-    """Upload a CSV file and import cars"""
-    # TODO: Implement
+    """
+    Upload a CSV file and import cars
+    
+    Pseudocode:
+    - Validate file is CSV
+    - Read file contents
+    - Parse CSV and extract car data
+    - For each car, validate owner_id exists
+    - Insert valid cars into database
+    - Return import result with count
+    """
     pass
 
 if __name__ == "__main__":
