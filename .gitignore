@@ -1,3 +1,22 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# SQLite databases
+*.sqlite
+*.sqlite3
+*.db
+
+# IDE and OS files
+.DS_Store
+.vscode/
+.idea/
+
+
 main_sqlite_class_based_1.py
 main_sqlite_class_based_2.py
 ARCHITECTURE_COMPARISON.md
+todos_db.sqlite
+main_json.cpython-312.pyc
