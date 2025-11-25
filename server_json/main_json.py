@@ -87,7 +87,7 @@ def get_todo(todo_id: int):
     return todo
 
 @app.post("/todos", response_model=TodoItem, status_code=201)
-def create_todo(todo: TodoUpdate):
+def create_todo(todo: TodoItem):
     """Create a new todo"""
     todos = read_todos()
     
@@ -160,4 +160,4 @@ if __name__ == "__main__":
 
 
 # Run the server
-# uvicorn main_json:app --reload --port 8000
+# uvicorn server_json.main_json:app --reload --port 8000
