@@ -151,7 +151,7 @@ def update_todo_in_db(todo_id: int, todo_update: TodoUpdate) -> dict:
     
     if not row:
         conn.close()
-        raise HTTPException(status_code=404, detail="Todo not found")
+        return None
     
     # Build update query dynamically based on provided fields
     update_data = todo_update.model_dump(exclude_unset=True)
@@ -182,6 +182,8 @@ def update_todo_in_db(todo_id: int, todo_update: TodoUpdate) -> dict:
     
     values.append(todo_id)  # For WHERE clause
     
+    # query = "UPDATE todos SET title = ?, description = ?, completed = ?, updated_at = ? WHERE id = ?"
+    # values = [title, description, completed, datetime.now().isoformat(), todo_id]
     query = f"UPDATE todos SET {', '.join(set_clauses)} WHERE id = ?"
     cursor.execute(query, values)
     
@@ -199,7 +201,7 @@ def delete_todo_from_db(todo_id: int) -> bool:
     cursor.execute("SELECT id FROM todos WHERE id = ?", (todo_id,))
     if not cursor.fetchone():
         conn.close()
-        raise HTTPException(status_code=404, detail="Todo not found")
+        return None
     
     cursor.execute("DELETE FROM todos WHERE id = ?", (todo_id,))
     conn.commit()
@@ -286,12 +288,17 @@ def create_todo(todo: TodoUpdate):
 @app.put("/todos/{todo_id}", response_model=TodoItem)
 def update_todo(todo_id: int, todo_update: TodoUpdate):
     """Update an existing todo"""
-    return update_todo_in_db(todo_id, todo_update)
+    updated_todo = update_todo_in_db(todo_id, todo_update)
+    if updated_todo is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    return updated_todo
 
 @app.delete("/todos/{todo_id}", status_code=204)
 def delete_todo(todo_id: int):
     """Delete a todo"""
-    delete_todo_from_db(todo_id)
+    deleted = delete_todo_from_db(todo_id)
+    if deleted is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
     return None
 
 @app.delete("/todos", status_code=204)
