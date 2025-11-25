@@ -1,0 +1,12 @@
+title,description,completed
+Learn SQLite,Complete the SQLite tutorial and exercises,0
+Build FastAPI App,Create REST API endpoints with FastAPI,0
+Deploy Application,Deploy the app to production server,1
+Write Documentation,Document all API endpoints,0
+Test Database,Write unit tests for database operations,0
+Review Code,Code review with team members,1
+Setup CI/CD,Configure continuous integration pipeline,0
+Optimize Queries,Improve database query performance,0
+Add Authentication,Implement user authentication system,0
+Create Dashboard,Build admin dashboard for monitoring,1
+

@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from pydantic import BaseModel
 import sqlite3
 import os
 from datetime import datetime
 import uvicorn
+import csv
+import io
 
 app = FastAPI(title="Todo List API (SQLite)", version="1.0.0")
 
@@ -15,7 +17,7 @@ def print_middleware(request: Request, call_next):
     return response
 
 # Database file path
-DB_FILE = "todos_db"
+DB_FILE = "server_sqlite/todos_db.sqlite"
 
 # Pydantic models
 class TodoItem(BaseModel):
@@ -33,10 +35,11 @@ class TodoUpdate(BaseModel):
 
 # Database initialization
 def init_db():
-    """Initialize database and create table if it doesn't exist"""
+    """Initialize database and create tables if they don't exist"""
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
+    # Create todos table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS todos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -213,6 +216,47 @@ def delete_all_todos_from_db():
     conn.commit()
     conn.close()
 
+def import_csv_to_db(csv_content: bytes) -> dict:
+    """Import CSV content and append rows to todos table. CSV file is not stored."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Read CSV content
+        csv_text = csv_content.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(csv_text))
+        
+        imported_count = 0
+        now = datetime.now().isoformat()
+        
+        # Append rows to todos table
+        for row in csv_reader:
+            title = row.get('title', '').strip()
+            if not title:  # Skip rows without title
+                continue
+            
+            description = row.get('description', '').strip() or None
+            completed = 1 if str(row.get('completed', '0')).strip().lower() in ('1', 'true', 'yes') else 0
+            
+            cursor.execute("""
+                INSERT INTO todos (title, description, completed, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+            """, (title, description, completed, now, now))
+            imported_count += 1
+        
+        conn.commit()
+        
+        return {
+            "message": f"Successfully imported {imported_count} todos from CSV",
+            "imported_count": imported_count,
+            "uploaded_at": now
+        }
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=400, detail=f"Error importing CSV: {str(e)}")
+    finally:
+        conn.close()
+
 # API Endpoints
 
 @app.get("/")
@@ -235,7 +279,7 @@ def get_todo(todo_id: int):
     return todo
 
 @app.post("/todos", response_model=TodoItem, status_code=201)
-def create_todo(todo: TodoItem):
+def create_todo(todo: TodoUpdate):
     """Create a new todo"""
     return create_todo_in_db(todo)
 
@@ -255,6 +299,21 @@ def delete_all_todos():
     """Delete all todos"""
     delete_all_todos_from_db()
     return None
+
+@app.post("/todos/upload-csv")
+async def upload_csv(file: UploadFile = File(...)):
+    """Upload a CSV file and append all rows to the todos table. Only appends to todos - CSV file is not stored."""
+    # Validate file type
+    if not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=400, detail="File must be a CSV file")
+    
+    # Read file content
+    contents = await file.read()
+    
+    # Import CSV and store in database
+    result = import_csv_to_db(contents)
+    
+    return result
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8001)
